@@ -1,6 +1,7 @@
 import router from "@/router/index";
 import { NIcon, type MenuOption } from "naive-ui";
-import { type Component, h } from "vue";
+import { h } from "vue";
+import type { Component } from "vue";
 import { map } from "lodash-es";
 import { RouterLink, type RouteRecordRaw } from "vue-router";
 
@@ -18,7 +19,7 @@ function routesToMenus(
           RouterLink,
           {
             to: {
-              name: m.name,
+              path: m.path,
             },
           },
           { default: () => m.meta?.label }
