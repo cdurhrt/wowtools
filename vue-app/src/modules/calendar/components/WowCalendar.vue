@@ -8,65 +8,101 @@ import {
   subDays,
   isToday,
 } from "date-fns";
-import { reactive } from "vue";
+import { computed, reactive, watchEffect } from "vue";
 import { CalendarUtil } from "@/libs/calendar/calendar.js";
 
-console.log("CalendarUtil :>> ", CalendarUtil);
+// console.log("CalendarUtil :>> ", CalendarUtil);
 
-const weekNames = reactive(["日", "一", "二", "三", "四", "五", "六"]);
-const startFormSun = true;
-
-const paramsYear = 2022;
-const paramsMonth = 7;
-const paramsDay = 25;
-const paramsDate = new Date(paramsYear, paramsMonth - 1, paramsDay);
+const props = defineProps<{
+  year?: number;
+  month?: number;
+  day?: number;
+  sundayStart?: boolean;
+}>();
 
 const todayDate = new Date();
-const todayWeek = todayDate.getDay();
+const todayYear = todayDate.getFullYear();
+const todayMonth = todayDate.getMonth() + 1;
+// const todayWeek = todayDate.getDay();
+const todayDay = todayDate.getDate();
 
-const monthStartDate = startOfMonth(paramsDate);
-const monthEndDate = endOfMonth(paramsDate);
-
-const startDateWeek = monthStartDate.getDay();
-const endDateWeek = monthEndDate.getDay();
-
-let prefixDatesList: Date[] = [],
-  suffixDatesList: Date[] = [];
-
-if (startDateWeek > 0) {
-  prefixDatesList = eachDayOfInterval({
-    start: subDays(monthStartDate, startDateWeek),
-    end: subDays(monthStartDate, 1),
-  });
-}
-
-if (endDateWeek < 6) {
-  suffixDatesList = eachDayOfInterval({
-    start: addDays(monthEndDate, 1),
-    end: addDays(monthEndDate, 6 - endDateWeek),
-  });
-}
-
-const monthAllDatesList = eachDayOfInterval({
-  start: monthStartDate,
-  end: monthEndDate,
+const paramsYear = computed(() => props.year || todayYear);
+const paramsMonth = computed(() => props.month || todayMonth);
+const paramsDay = computed(() => props.day || todayDay);
+const isSundayStart = computed(() => props.sundayStart || false);
+const paramsDate = computed(
+  () => new Date(paramsYear.value, paramsMonth.value - 1, paramsDay.value)
+);
+const sundayStartOffset = computed(() => (isSundayStart.value ? 0 : 1));
+const weekNames = computed(() => {
+  const list = ["一", "二", "三", "四", "五", "六"];
+  list[isSundayStart.value ? "unshift" : "push"]("日");
+  return list;
 });
 
-const dateDetailsList = [
-  ...prefixDatesList,
-  ...monthAllDatesList,
-  ...suffixDatesList,
-].map((m) => {
-  return {
-    oDate: m,
-    oDateLabel: format(m, "yyyy-MM-dd"),
-    ...CalendarUtil.solar2lunar(m.getFullYear(), m.getMonth() + 1, m.getDate()),
-  };
+const dateDetailsList = reactive<Array<{ [key: string]: unknown }>>([]);
+
+const watcher = watchEffect(() => {
+  const monthStartDate = startOfMonth(paramsDate.value);
+  const monthEndDate = endOfMonth(paramsDate.value);
+
+  const monthStartDateWeek = monthStartDate.getDay();
+  const monthEndDateWeek = monthEndDate.getDay();
+
+  let prefixDatesList: Date[] = [],
+    suffixDatesList: Date[] = [];
+
+  if (monthStartDateWeek > 0 + sundayStartOffset.value) {
+    prefixDatesList = eachDayOfInterval({
+      start: subDays(
+        monthStartDate,
+        monthStartDateWeek - sundayStartOffset.value
+      ),
+      end: subDays(monthStartDate, 1),
+    });
+  }
+
+  if (isSundayStart.value ? monthEndDateWeek !== 6 : monthEndDateWeek !== 0) {
+    suffixDatesList = eachDayOfInterval({
+      start: addDays(monthEndDate, 1),
+      end: addDays(
+        monthEndDate,
+        6 - monthEndDateWeek + sundayStartOffset.value
+      ),
+    });
+  }
+
+  const monthDatesList = eachDayOfInterval({
+    start: monthStartDate,
+    end: monthEndDate,
+  });
+
+  dateDetailsList.splice(0, dateDetailsList.length);
+  dateDetailsList.push(
+    ...[...prefixDatesList, ...monthDatesList, ...suffixDatesList]
+      .map((m) => {
+        return {
+          oDate: m,
+          oDateLabel: format(m, "yyyy-MM-dd"),
+          ...CalendarUtil.solar2lunar(
+            m.getFullYear(),
+            m.getMonth() + 1,
+            m.getDate()
+          ),
+        };
+      })
+      .map((m) => ({
+        ...m,
+        isWeekend: m.nWeek < 1 || m.nWeek > 5,
+        isCurrentMonth: m.cMonth === paramsMonth.value,
+      }))
+  );
 });
 console.log("dateDetailsList :>> ", dateDetailsList);
 </script>
 
 <template>
+  <h1>{{ year }}年{{ month }}月{{ day }}日</h1>
   <div class="wow-calendar">
     <div class="wow-calendar-week">
       <div
@@ -81,16 +117,25 @@ console.log("dateDetailsList :>> ", dateDetailsList);
       <div
         v-for="(item, index) in dateDetailsList"
         :key="index"
-        :class="{
-          'wow-calendar-day--item': true,
-          'today-style': isToday(item.oDate),
-        }"
+        class="wow-calendar-day--item"
       >
-        <div>
-          {{ item.cDay }}
-        </div>
-        <div>
-          {{ item.IDayCn }}
+        <div
+          :class="{
+            'wow-calendar-day--itembody': true,
+            'today-style': isToday(item.oDate as Date),
+            'weekend-day': item.isWeekend,
+            'not-this-month-day': !item.isCurrentMonth,
+          }"
+        >
+          <div class="solar-day-text">
+            {{ item.cDay }}
+          </div>
+          <div v-if="!item.lunarFestival" class="lunar-day-text">
+            {{ item.IDayCn }}
+          </div>
+          <div v-else class="lunar-festival-text">
+            {{ item.lunarFestival }}
+          </div>
         </div>
       </div>
     </div>
@@ -98,6 +143,11 @@ console.log("dateDetailsList :>> ", dateDetailsList);
 </template>
 
 <style scoped>
+.wow-calendar {
+  border-style: solid;
+  border-color: #efefef;
+  border-width: 1px 0 0 1px;
+}
 .wow-calendar-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -109,12 +159,52 @@ console.log("dateDetailsList :>> ", dateDetailsList);
   grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: minmax(100px, auto);
 }
-.wow-calendar-week--item,
-.wow-calendar-day--item {
-  width: 100%;
+
+.wow-calendar-week--item {
   padding: 1rem;
 }
+
+.wow-calendar-week--item,
+.wow-calendar-day--item,
+.wow-calendar-day--itembody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.wow-calendar-week--item,
+.wow-calendar-day--item {
+  border-style: solid;
+  border-color: #f4f4f4;
+  border-width: 0 1px 1px 0;
+}
+
+.wow-calendar-day--itembody {
+  height: 100%;
+}
+
+.weekend-day {
+  background-color: #ebfdf5;
+}
 .today-style {
-  border: 1px solid red;
+  background-color: #fff7f7;
+}
+.solar-day-text {
+  font-size: 1.5rem;
+  color: #333;
+}
+.lunar-day-text {
+  font-size: 0.9rem;
+  color: rgb(156, 156, 156);
+}
+.lunar-festival-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgb(204, 53, 53);
+}
+.not-this-month-day div {
+  opacity: 0.2;
 }
 </style>
