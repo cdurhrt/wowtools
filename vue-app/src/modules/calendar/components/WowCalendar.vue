@@ -8,8 +8,12 @@ import {
   subDays,
   isToday,
 } from "date-fns";
-import { computed, reactive, watchEffect } from "vue";
+import { computed, reactive, watchEffect, ref } from "vue";
 import { CalendarUtil } from "@/libs/calendar/calendar.js";
+import { NButton, NSpace, NSelect, NGrid, NGridItem } from "naive-ui";
+import { ChevronLeft24Filled } from "@vicons/fluent";
+import { range } from "lodash";
+import InlineBox from "@/components/global/InlineBox.vue";
 
 // console.log("CalendarUtil :>> ", CalendarUtil);
 
@@ -39,6 +43,12 @@ const weekNames = computed(() => {
   list[isSundayStart.value ? "unshift" : "push"]("日");
   return list;
 });
+
+const selectYear = ref(todayYear);
+const yearOpts = range(1901, 2101).map((m) => ({
+  label: `${m}`,
+  value: m,
+}));
 
 const dateDetailsList = reactive<Array<{ [key: string]: unknown }>>([]);
 
@@ -103,6 +113,43 @@ console.log("dateDetailsList :>> ", dateDetailsList);
 
 <template>
   <h1>{{ year }}年{{ month }}月{{ day }}日</h1>
+  <n-grid :x-gap="14" :cols="4">
+    <n-grid-item>
+      <n-space>
+        <n-button>
+          <n-icon size="18">
+            <ChevronLeft24Filled />
+          </n-icon>
+        </n-button>
+        <InlineBox :width="80">
+          <n-select v-model:value="selectYear" :options="yearOpts" />
+        </InlineBox>
+        <n-button>
+          <n-icon size="18">
+            <ChevronLeft24Filled />
+          </n-icon>
+        </n-button>
+      </n-space>
+    </n-grid-item>
+    <n-grid-item>
+      <n-space>
+        <n-button>
+          <n-icon size="18">
+            <ChevronLeft24Filled />
+          </n-icon>
+        </n-button>
+        <InlineBox :width="80">
+          <n-select v-model:value="selectYear" :options="yearOpts" />
+        </InlineBox>
+        <n-button>
+          <n-icon size="18">
+            <ChevronLeft24Filled />
+          </n-icon>
+        </n-button>
+      </n-space>
+    </n-grid-item>
+    <n-grid-item></n-grid-item>
+  </n-grid>
   <div class="wow-calendar">
     <div class="wow-calendar-week">
       <div
