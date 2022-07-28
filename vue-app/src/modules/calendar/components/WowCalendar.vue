@@ -11,9 +11,9 @@ import {
 import { computed, reactive, watchEffect, ref } from "vue";
 import { CalendarUtil } from "@/libs/calendar/calendar.js";
 import { NButton, NSpace, NSelect, NGrid, NGridItem } from "naive-ui";
-import { ChevronLeft24Filled } from "@vicons/fluent";
 import { range } from "lodash";
 import InlineBox from "@/components/global/InlineBox.vue";
+import { ChevronBackSharp, ChevronForwardSharp } from "@vicons/ionicons5";
 
 // console.log("CalendarUtil :>> ", CalendarUtil);
 
@@ -44,17 +44,29 @@ const weekNames = computed(() => {
   return list;
 });
 
-const selectYear = ref(todayYear);
 const yearOpts = range(1901, 2101).map((m) => ({
   label: `${m}`,
   value: m,
 }));
+const monthOpts = range(1, 13).map((m) => ({
+  label: `${m}`,
+  value: m,
+}));
+
+const selectYear = ref(paramsYear.value);
+const selectMonth = ref(paramsMonth.value);
+const selectDay = ref(paramsDay.value);
+
+const selectDate = computed(
+  () => new Date(selectYear.value, selectMonth.value - 1, selectDay.value)
+);
+console.log("selectDate :>> ", selectDate.value);
 
 const dateDetailsList = reactive<Array<{ [key: string]: unknown }>>([]);
 
 const watcher = watchEffect(() => {
-  const monthStartDate = startOfMonth(paramsDate.value);
-  const monthEndDate = endOfMonth(paramsDate.value);
+  const monthStartDate = startOfMonth(selectDate.value);
+  const monthEndDate = endOfMonth(selectDate.value);
 
   const monthStartDateWeek = monthStartDate.getDay();
   const monthEndDateWeek = monthEndDate.getDay();
@@ -113,38 +125,38 @@ console.log("dateDetailsList :>> ", dateDetailsList);
 
 <template>
   <h1>{{ year }}年{{ month }}月{{ day }}日</h1>
-  <n-grid :x-gap="14" :cols="4">
+  <n-grid :x-gap="14" :cols="4" class="calendar-selector">
     <n-grid-item>
       <n-space>
         <n-button>
-          <n-icon size="18">
-            <ChevronLeft24Filled />
-          </n-icon>
+          <template #icon>
+            <ChevronBackSharp />
+          </template>
         </n-button>
-        <InlineBox :width="80">
+        <InlineBox :width="100">
           <n-select v-model:value="selectYear" :options="yearOpts" />
         </InlineBox>
         <n-button>
-          <n-icon size="18">
-            <ChevronLeft24Filled />
-          </n-icon>
+          <template #icon>
+            <ChevronForwardSharp />
+          </template>
         </n-button>
       </n-space>
     </n-grid-item>
     <n-grid-item>
       <n-space>
         <n-button>
-          <n-icon size="18">
-            <ChevronLeft24Filled />
-          </n-icon>
+          <template #icon>
+            <ChevronBackSharp />
+          </template>
         </n-button>
-        <InlineBox :width="80">
-          <n-select v-model:value="selectYear" :options="yearOpts" />
+        <InlineBox :width="100">
+          <n-select v-model:value="selectMonth" :options="monthOpts" />
         </InlineBox>
         <n-button>
-          <n-icon size="18">
-            <ChevronLeft24Filled />
-          </n-icon>
+          <template #icon>
+            <ChevronForwardSharp />
+          </template>
         </n-button>
       </n-space>
     </n-grid-item>
@@ -233,7 +245,8 @@ console.log("dateDetailsList :>> ", dateDetailsList);
 }
 
 .weekend-day {
-  background-color: #ebfdf5;
+  background-color: #f2fff9;
+  /* background-color: rgb(240, 240, 240); */
 }
 .today-style {
   background-color: #fff7f7;
@@ -253,5 +266,8 @@ console.log("dateDetailsList :>> ", dateDetailsList);
 }
 .not-this-month-day div {
   opacity: 0.2;
+}
+.calendar-selector {
+  margin: 8px auto;
 }
 </style>
