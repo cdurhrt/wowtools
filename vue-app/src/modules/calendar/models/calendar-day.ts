@@ -26,7 +26,7 @@ export interface CalendarDay {
   astro: string; // 星座名
   isToday: boolean; // 是否今日
   isWeekend: boolean; // 是否周末
-  isCurrentMonth: boolean; // 是否是面板当月
+  isCurPanelMonth: boolean; // 是否是面板当月
   isHoliday: boolean; // 是否是假期
   isHolidayFix: boolean; // 是否是调休
 }
@@ -59,7 +59,7 @@ export const CalendarDayDict = {
   astro: "星座名",
   isToday: "是否今日",
   isWeekend: "是否周末",
-  isCurrentMonth: "是否是面板当月",
+  isCurPanelMonth: "是否是面板当月",
   isHoliday: "是否是假期",
   isHolidayFix: "是否是调休",
 };

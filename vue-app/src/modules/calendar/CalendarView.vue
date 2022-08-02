@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getYear, getMonth, getDate } from "date-fns";
-import { NDatePicker, NSpace } from "naive-ui";
+import { NSpace } from "naive-ui";
 import { ref, computed } from "vue";
 import WowCalendar from "./components/WowCalendar.vue";
 import type { CalendarDay } from "./models/calendar-day";
@@ -23,9 +23,8 @@ function calendarDaySelected(day: CalendarDay) {
 </script>
 
 <template>
-  <n-space class="calendar-wrapper">
-    <!-- <n-date-picker v-model:value="timestamp" type="date" /> -->
-    <div>
+  <n-space>
+    <div class="calendar-wrapper">
       <WowCalendar
         :year="calendarYear"
         :month="calendarMonth"
@@ -39,4 +38,8 @@ function calendarDaySelected(day: CalendarDay) {
   </n-space>
 </template>
 
-<style scoped></style>
+<style scoped>
+.calendar-wrapper {
+  flex: 1;
+}
+</style>

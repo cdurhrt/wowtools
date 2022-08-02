@@ -24,12 +24,12 @@ export const circleSigns = reactive({
   },
   "is-xiu": {
     if: (item: CalendarDay) => item.isHoliday,
-    title: "休假",
+    title: "法定假日",
     color: "#e33636",
   },
   "is-tiaoxiu": {
     if: (item: CalendarDay) => item.isHolidayFix,
-    title: "上班",
+    title: "调休上班",
     color: "#000862",
   },
 });

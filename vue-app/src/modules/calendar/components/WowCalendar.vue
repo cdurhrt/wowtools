@@ -9,8 +9,16 @@ import {
 } from "date-fns";
 import { computed, reactive, watchEffect, ref } from "vue";
 import { CalendarUtil } from "@/libs/calendar/calendar.js";
-import { NButton, NSpace, NSelect, NGrid, NGridItem, NPopover } from "naive-ui";
-import { compact, range } from "lodash";
+import {
+  NButton,
+  NSpace,
+  NSelect,
+  NGrid,
+  NGridItem,
+  NPopover,
+  NSwitch,
+} from "naive-ui";
+import { compact, map, range } from "lodash";
 import InlineBox from "@/components/global/InlineBox.vue";
 import { ChevronBackSharp, ChevronForwardSharp } from "@vicons/ionicons5";
 import type { CalendarDay } from "../models/calendar-day.js";
@@ -35,10 +43,12 @@ const todayDay = todayDate.getDate();
 const paramsYear = computed(() => props.year || todayYear);
 const paramsMonth = computed(() => props.month || todayMonth);
 const paramsDay = computed(() => props.day || todayDay);
-const isSundayStart = computed(() => props.sundayStart || false);
-const paramsDate = computed(
-  () => new Date(paramsYear.value, paramsMonth.value - 1, paramsDay.value)
-);
+
+// const paramsDate = computed(
+//   () => new Date(paramsYear.value, paramsMonth.value - 1, paramsDay.value)
+// );
+
+const isSundayStart = ref(props.sundayStart || false);
 const sundayStartOffset = computed(() => (isSundayStart.value ? 0 : 1));
 
 const weekNames = computed(() => {
@@ -60,9 +70,9 @@ const selectYear = ref(paramsYear.value);
 const selectMonth = ref(paramsMonth.value);
 const selectDay = ref(paramsDay.value);
 
-const onSelectYear = ref(paramsYear.value);
-const onSelectMonth = ref(paramsMonth.value);
-const onSelectDay = ref(paramsDay.value);
+const onTapYear = ref(paramsYear.value);
+const onTapMonth = ref(paramsMonth.value);
+const onTapDay = ref(paramsDay.value);
 
 const selectDate = computed(
   () => new Date(selectYear.value, selectMonth.value - 1, selectDay.value)
@@ -75,13 +85,18 @@ watchEffect(() => {
   const monthStartDate = startOfMonth(selectDate.value);
   const monthEndDate = endOfMonth(selectDate.value);
 
-  const monthStartDateWeek = monthStartDate.getDay();
+  const monthStartDateWeek =
+    monthStartDate.getDay() === 0
+      ? isSundayStart.value
+        ? 0
+        : 7
+      : monthStartDate.getDay();
   const monthEndDateWeek = monthEndDate.getDay();
 
   let prefixDatesList: Date[] = [],
     suffixDatesList: Date[] = [];
 
-  if (monthStartDateWeek > 0 + sundayStartOffset.value) {
+  if (monthStartDateWeek > sundayStartOffset.value) {
     prefixDatesList = eachDayOfInterval({
       start: subDays(
         monthStartDate,
@@ -108,33 +123,39 @@ watchEffect(() => {
 
   dateDetailsList.splice(0, dateDetailsList.length);
   dateDetailsList.push(
-    ...[...prefixDatesList, ...monthDatesList, ...suffixDatesList].map((m) => {
-      const calcDay = CalendarUtil.solar2lunar(
-        m.getFullYear(),
-        m.getMonth() + 1,
-        m.getDate()
-      );
-      return {
-        oDate: m,
-        oDateLabel: format(m, "yyyy-MM-dd"),
-        ...calcDay,
-        isWeekend: calcDay.nWeek < 1 || calcDay.nWeek > 5,
-        isCurrentMonth: calcDay.cMonth === selectMonth.value,
-        fests: compact([calcDay.Term, calcDay.lunarFestival, calcDay.festival]),
-        isHoliday: isHoliday(calcDay.cYear, calcDay.cMonth, calcDay.cDay),
-        isHolidayFix: isHolidayFix(calcDay.cYear, calcDay.cMonth, calcDay.cDay),
-      };
-    })
+    ...map(
+      [...prefixDatesList, ...monthDatesList, ...suffixDatesList],
+      getDayDetail
+    )
   );
 });
 console.log("dateDetailsList :>> ", dateDetailsList);
 
-// 选中日历
+// 将一个Date转成CalendarDay
+function getDayDetail(m: Date): CalendarDay {
+  const calcDay = CalendarUtil.solar2lunar(
+    m.getFullYear(),
+    m.getMonth() + 1,
+    m.getDate()
+  );
+  return {
+    ...calcDay,
+    oDate: m,
+    oDateLabel: format(m, "yyyy-MM-dd"),
+    isWeekend: calcDay.nWeek < 1 || calcDay.nWeek > 5,
+    isCurPanelMonth: calcDay.cMonth === selectMonth.value,
+    fests: compact([calcDay.Term, calcDay.lunarFestival, calcDay.festival]),
+    isHoliday: isHoliday(calcDay.cYear, calcDay.cMonth, calcDay.cDay),
+    isHolidayFix: isHolidayFix(calcDay.cYear, calcDay.cMonth, calcDay.cDay),
+  };
+}
+
+// 选中日历某日
 function calendarOnDaySelected(calendarDay: CalendarDay) {
   emit("onDaySelected", calendarDay);
-  onSelectYear.value = calendarDay.cYear;
-  onSelectMonth.value = calendarDay.cMonth;
-  onSelectDay.value = calendarDay.cDay;
+  onTapYear.value = calendarDay.cYear;
+  onTapMonth.value = calendarDay.cMonth;
+  onTapDay.value = calendarDay.cDay;
 }
 
 // 回到今天
@@ -144,101 +165,109 @@ function backToday() {
   selectDay.value = todayDay;
 
   calendarOnDaySelected(
-    CalendarUtil.solar2lunar(todayYear, todayMonth, todayDay)
+    getDayDetail(new Date(todayYear, todayMonth - 1, todayDay))
   );
 }
 </script>
 
 <template>
-  <!-- <h1>{{ year }}年{{ month }}月{{ day }}日</h1> -->
-  <n-grid :x-gap="14" :cols="4" class="calendar-selector">
-    <n-grid-item>
-      <n-space :wrap="false">
-        <n-button :disabled="selectYear < 1902" @click="selectYear--">
-          <template #icon>
-            <ChevronBackSharp />
-          </template>
-        </n-button>
-        <InlineBox :width="100">
-          <n-select v-model:value="selectYear" :options="yearOpts" />
-        </InlineBox>
-        <n-button :disabled="selectYear > 2099" @click="selectYear++">
-          <template #icon>
-            <ChevronForwardSharp />
-          </template>
-        </n-button>
-      </n-space>
-    </n-grid-item>
-    <n-grid-item>
-      <n-space :wrap="false">
-        <n-button :disabled="selectMonth < 2" @click="selectMonth--">
-          <template #icon>
-            <ChevronBackSharp />
-          </template>
-        </n-button>
-        <InlineBox :width="100">
-          <n-select v-model:value="selectMonth" :options="monthOpts" />
-        </InlineBox>
-        <n-button :disabled="selectMonth > 11" @click="selectMonth++">
-          <template #icon>
-            <ChevronForwardSharp />
-          </template>
-        </n-button>
-      </n-space>
-    </n-grid-item>
-    <n-grid-item>
-      <n-button @click="backToday"> 回到今天 </n-button>
-    </n-grid-item>
-  </n-grid>
-  <div class="wow-calendar">
-    <div class="wow-calendar-week">
-      <div
-        v-for="(item, index) in weekNames"
-        :key="index"
-        class="wow-calendar-week--item"
-      >
-        {{ item }}
-      </div>
-    </div>
-    <div class="wow-calendar-day">
-      <div
-        v-for="(item, index) in dateDetailsList"
-        :key="index"
-        class="wow-calendar-day--item"
-        @click="calendarOnDaySelected(item)"
-      >
-        <div
-          :class="{
-            'wow-calendar-day--itembody': true,
-            'is-weekend-day': item.isWeekend,
-            'not-cur-month-day': !item.isCurrentMonth,
-            'is-on-selected':
-              item.cYear === onSelectYear &&
-              item.cMonth === onSelectMonth &&
-              item.cDay === onSelectDay,
-          }"
-        >
-          <n-space class="circle-signs" :wrap="false">
-            <template v-for="(value, key) in circleSigns" :key="key">
-              <n-popover v-if="value.if(item)" trigger="hover">
-                <template #trigger>
-                  <div
-                    :class="['circle-signs-item', key]"
-                    :style="{ backgroundColor: value.color }"
-                  ></div>
-                </template>
-                <span>{{ value.title }}</span>
-              </n-popover>
+  <div class="">
+    <h1>{{ onTapYear }}年{{ onTapMonth }}月{{ onTapDay }}日</h1>
+    <n-grid :x-gap="14" :cols="4" class="calendar-selector">
+      <n-grid-item>
+        <n-space :wrap="false">
+          <n-button :disabled="selectYear < 1902" @click="selectYear--">
+            <template #icon>
+              <ChevronBackSharp />
             </template>
-          </n-space>
-          <div class="solar-day-text">{{ item.cDay }}</div>
-          <n-space v-if="item.fests.length">
-            <span class="festival-text">
-              {{ item.fests[0] }}
-            </span>
-          </n-space>
-          <div v-else class="lunar-day-text">
-            {{ item.IDayCn }}
+          </n-button>
+          <InlineBox :width="100">
+            <n-select v-model:value="selectYear" :options="yearOpts" />
+          </InlineBox>
+          <n-button :disabled="selectYear > 2099" @click="selectYear++">
+            <template #icon>
+              <ChevronForwardSharp />
+            </template>
+          </n-button>
+        </n-space>
+      </n-grid-item>
+      <n-grid-item>
+        <n-space :wrap="false">
+          <n-button :disabled="selectMonth < 2" @click="selectMonth--">
+            <template #icon>
+              <ChevronBackSharp />
+            </template>
+          </n-button>
+          <InlineBox :width="100">
+            <n-select v-model:value="selectMonth" :options="monthOpts" />
+          </InlineBox>
+          <n-button :disabled="selectMonth > 11" @click="selectMonth++">
+            <template #icon>
+              <ChevronForwardSharp />
+            </template>
+          </n-button>
+        </n-space>
+      </n-grid-item>
+      <n-grid-item>
+        <n-space align="center">
+          <n-button @click="backToday"> 回到今天 </n-button>
+          <n-switch v-model:value="isSundayStart" size="large">
+            <template #checked> 周日开始 </template>
+            <template #unchecked> 周一开始 </template>
+          </n-switch>
+        </n-space>
+      </n-grid-item>
+    </n-grid>
+    <div class="wow-calendar">
+      <div class="wow-calendar-week">
+        <div
+          v-for="(item, index) in weekNames"
+          :key="index"
+          class="wow-calendar-week--item"
+        >
+          {{ item }}
+        </div>
+      </div>
+      <div class="wow-calendar-day">
+        <div
+          v-for="(item, index) in dateDetailsList"
+          :key="index"
+          class="wow-calendar-day--item"
+          @click="calendarOnDaySelected(item)"
+        >
+          <div
+            :class="{
+              'wow-calendar-day--itembody': true,
+              'is-weekend-day': item.isWeekend,
+              'not-cur-month-day': !item.isCurPanelMonth,
+              'is-on-selected':
+                item.cYear === onTapYear &&
+                item.cMonth === onTapMonth &&
+                item.cDay === onTapDay,
+            }"
+          >
+            <n-space class="circle-signs" :wrap="false">
+              <template v-for="(value, key) in circleSigns" :key="key">
+                <n-popover v-if="value.if(item)" trigger="hover">
+                  <template #trigger>
+                    <div
+                      :class="['circle-signs-item', key]"
+                      :style="{ backgroundColor: value.color }"
+                    ></div>
+                  </template>
+                  <span>{{ value.title }}</span>
+                </n-popover>
+              </template>
+            </n-space>
+            <div class="solar-day-text">{{ item.cDay }}</div>
+            <n-space v-if="item.fests.length">
+              <span class="festival-text">
+                {{ item.fests[0] }}
+              </span>
+            </n-space>
+            <div v-else class="lunar-day-text">
+              {{ item.IDayCn }}
+            </div>
           </div>
         </div>
       </div>
@@ -340,6 +369,5 @@ function backToday() {
 
 .is-on-selected {
   background-color: #eaf2fd;
-  /* border-color: #96e1ff; */
 }
 </style>
