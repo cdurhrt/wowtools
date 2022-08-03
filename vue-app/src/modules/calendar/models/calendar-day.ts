@@ -30,36 +30,3 @@ export interface CalendarDay {
   isHoliday: boolean; // 是否是假期
   isHolidayFix: boolean; // 是否是调休
 }
-
-export const CalendarDayDict = {
-  oDate: "日期",
-  oDateLabel: "日期标签",
-  date: "公历日期",
-  lunarDate: "农历日期",
-  fests: "节日、节气",
-  festival: "公历节日",
-  lunarFestival: "农历节日",
-  isTerm: "是否节气",
-  Term: "节气名",
-  Animal: "生肖",
-  isLeap: "是否闰月",
-  lYear: "农历年",
-  lMonth: "农历月",
-  lDay: "农历日",
-  IMonthCn: "大写农历月",
-  IDayCn: "大写农历日",
-  gzYear: "干支年",
-  gzMonth: "干支月",
-  gzDay: "干支日",
-  cYear: "公历年",
-  cMonth: "公历月",
-  cDay: "公历日",
-  nWeek: "周n",
-  ncWeek: "周几",
-  astro: "星座名",
-  isToday: "是否今日",
-  isWeekend: "是否周末",
-  isCurPanelMonth: "是否是面板当月",
-  isHoliday: "是否是假期",
-  isHolidayFix: "是否是调休",
-};

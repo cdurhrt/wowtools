@@ -292,7 +292,7 @@ export const CalendarUtil = {
    * 阳历节日
    */
   festival: {
-    "1-1": { title: "元旦节" },
+    "1-1": { title: "元旦" },
     "2-14": { title: "情人节" },
     "5-1": { title: "劳动节" },
     "5-4": { title: "青年节" },

@@ -4,7 +4,7 @@ import { NSpace } from "naive-ui";
 import { ref, computed } from "vue";
 import WowCalendar from "./components/WowCalendar.vue";
 import type { CalendarDay } from "./models/calendar-day";
-import DayBoard from "./components/DayBoard.vue";
+import CalendarPaper from "./components/CalendarPaper.vue";
 import { CalendarUtil } from "@/libs/calendar/calendar";
 
 const timestamp = ref(new Date().getTime());
@@ -33,7 +33,7 @@ function calendarDaySelected(day: CalendarDay) {
       ></WowCalendar>
     </div>
     <div>
-      <DayBoard :data="dayBoardDay"></DayBoard>
+      <CalendarPaper :data="dayBoardDay"></CalendarPaper>
     </div>
   </n-space>
 </template>

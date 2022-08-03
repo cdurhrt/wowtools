@@ -22,7 +22,7 @@ import { compact, map, range } from "lodash";
 import InlineBox from "@/components/global/InlineBox.vue";
 import { ChevronBackSharp, ChevronForwardSharp } from "@vicons/ionicons5";
 import type { CalendarDay } from "../models/calendar-day.js";
-import { circleSigns } from "../models/circle-signs";
+import { CalendarDayCircleSigns } from "../models/day-signs";
 import { isHoliday, isHolidayFix } from "../models/holiday.js";
 
 const props = defineProps<{
@@ -247,12 +247,15 @@ function backToday() {
             }"
           >
             <n-space class="circle-signs" :wrap="false">
-              <template v-for="(value, key) in circleSigns" :key="key">
+              <template
+                v-for="(value, key) in CalendarDayCircleSigns"
+                :key="key"
+              >
                 <n-popover v-if="value.if(item)" trigger="hover">
                   <template #trigger>
                     <div
                       :class="['circle-signs-item', key]"
-                      :style="{ backgroundColor: value.color }"
+                      :style="{ backgroundColor: value.color.main }"
                     ></div>
                   </template>
                   <span>{{ value.title }}</span>
