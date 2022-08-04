@@ -160,20 +160,29 @@ function calendarOnDaySelected(calendarDay: CalendarDay) {
 
 // 回到今天
 function backToday() {
-  selectYear.value = todayYear;
-  selectMonth.value = todayMonth;
-  selectDay.value = todayDay;
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
 
-  calendarOnDaySelected(
-    getDayDetail(new Date(todayYear, todayMonth - 1, todayDay))
-  );
+  selectYear.value = year;
+  selectMonth.value = month;
+  selectDay.value = day;
+
+  calendarOnDaySelected(getDayDetail(new Date()));
 }
 </script>
 
 <template>
   <div class="">
     <h1>{{ onTapYear }}年{{ onTapMonth }}月{{ onTapDay }}日</h1>
-    <n-grid :x-gap="14" :cols="4" class="calendar-selector">
+    <n-grid
+      :x-gap="14"
+      :cols="4"
+      responsive="screen"
+      item-responsive
+      class="calendar-selector"
+    >
       <n-grid-item>
         <n-space :wrap="false">
           <n-button :disabled="selectYear < 1902" @click="selectYear--">

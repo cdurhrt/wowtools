@@ -23,7 +23,7 @@ function calendarDaySelected(day: CalendarDay) {
 </script>
 
 <template>
-  <n-space>
+  <!-- <n-space>
     <div class="calendar-wrapper">
       <WowCalendar
         :year="calendarYear"
@@ -35,11 +35,14 @@ function calendarDaySelected(day: CalendarDay) {
     <div>
       <CalendarPaper :data="dayBoardDay"></CalendarPaper>
     </div>
-  </n-space>
+  </n-space> -->
+
+  <WowCalendar
+    :year="calendarYear"
+    :month="calendarMonth"
+    :day="calendarDay"
+    @on-day-selected="calendarDaySelected"
+  ></WowCalendar>
 </template>
 
-<style scoped>
-.calendar-wrapper {
-  flex: 1;
-}
-</style>
+<style scoped></style>

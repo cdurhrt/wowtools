@@ -42,8 +42,8 @@ export const CalendarDayTypeNames = {
   [TypeEnum.term]: "节气",
   [TypeEnum.festival]: "公历节日",
   [TypeEnum["lunar-festival"]]: "农历节日",
-  [TypeEnum.holiday]: "法定假日",
-  [TypeEnum["holiday-fix"]]: "调休上班",
+  [TypeEnum.holiday]: "休",
+  [TypeEnum["holiday-fix"]]: "班",
 };
 
 export const CalendarDayCircleSigns = {

@@ -1,8 +1,22 @@
 <script setup lang="ts">
 import { compact, flatten, map } from "lodash";
-import { NGrid, NGi, NDivider, NSpace, NTag } from "naive-ui";
-import { reactive, watchEffect } from "vue";
+import { NGrid, NGi, NDivider, NSpace, NTag, NIcon, NPopover } from "naive-ui";
+import { reactive, shallowRef, watchEffect, type Component } from "vue";
 import type { CalendarDay } from "../models/calendar-day.js";
+import {
+  ZodiacAquarius,
+  ZodiacAries,
+  ZodiacCancer,
+  ZodiacCapricorn,
+  ZodiacGemini,
+  ZodiacLeo,
+  ZodiacLibra,
+  ZodiacPisces,
+  ZodiacSagittarius,
+  ZodiacScorpio,
+  ZodiacTaurus,
+  ZodiacVirgo,
+} from "@vicons/tabler";
 
 import {
   CalendarDayColors,
@@ -22,6 +36,21 @@ interface FestTag {
 
 const props = defineProps<{ data: CalendarDay }>();
 console.log("props :>> ", props);
+
+const astroIcons = shallowRef<Record<string, Component>>({
+  白羊座: ZodiacAries,
+  金牛座: ZodiacTaurus,
+  双子座: ZodiacGemini,
+  巨蟹座: ZodiacCancer,
+  狮子座: ZodiacLeo,
+  处女座: ZodiacVirgo,
+  天秤座: ZodiacLibra,
+  天蝎座: ZodiacScorpio,
+  射手座: ZodiacSagittarius,
+  摩羯座: ZodiacCapricorn,
+  水瓶座: ZodiacAquarius,
+  双鱼座: ZodiacPisces,
+});
 
 const tagFns = [
   gTagFn(TypeEnum.today, (d: CalendarDay) => [
@@ -72,7 +101,13 @@ function gTagFn(type: TypeEnum, fn: (d: CalendarDay) => string[]) {
   <div class="calendar-paper">
     <n-grid x-gap="12" y-gap="24" :cols="2">
       <n-gi>
-        <div>{{ data.cYear }}年{{ data.cMonth }}月</div>
+        <n-space align="center">
+          <span>{{ data.cYear }}年{{ data.cMonth }}月</span>
+          <span>
+            <n-icon size="16" :component="astroIcons[data.astro]"> </n-icon>
+            {{ data.astro }}
+          </span>
+        </n-space>
         <div>{{ data.ncWeek }}</div>
         <div class="cDay">{{ data.cDay }}</div>
         <n-divider />
@@ -106,9 +141,9 @@ function gTagFn(type: TypeEnum, fn: (d: CalendarDay) => string[]) {
 
 <style scoped>
 .calendar-paper {
-  width: 666px;
+  min-width: 600px;
   padding: 40px 32px;
-  margin: 16px;
+  margin: 12px;
   box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px,
     rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
 }
