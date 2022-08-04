@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { compact, flatten, map } from "lodash";
-import { NGrid, NGi, NDivider, NSpace, NTag, NIcon, NPopover } from "naive-ui";
+import { NGrid, NGi, NDivider, NSpace, NTag, NIcon } from "naive-ui";
 import { reactive, shallowRef, watchEffect, type Component } from "vue";
 import type { CalendarDay } from "../models/calendar-day.js";
 import {
@@ -131,11 +131,6 @@ function gTagFn(type: TypeEnum, fn: (d: CalendarDay) => string[]) {
         {{ item.text }}
       </n-tag>
     </n-space>
-    <!-- <n-grid x-gap="12" y-gap="12" :cols="2">
-      <n-gi v-for="(item, key, index) in CalendarDayDict" :key="index">
-        <div>{{ item }}：{{ data[key] }}</div>
-      </n-gi>
-    </n-grid> -->
   </div>
 </template>
 

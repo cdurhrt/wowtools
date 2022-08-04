@@ -175,58 +175,46 @@ function backToday() {
 
 <template>
   <div class="">
-    <h1>{{ onTapYear }}年{{ onTapMonth }}月{{ onTapDay }}日</h1>
-    <n-grid
-      :x-gap="14"
-      :cols="4"
-      responsive="screen"
-      item-responsive
-      class="calendar-selector"
-    >
-      <n-grid-item>
-        <n-space :wrap="false">
-          <n-button :disabled="selectYear < 1902" @click="selectYear--">
-            <template #icon>
-              <ChevronBackSharp />
-            </template>
-          </n-button>
-          <InlineBox :width="100">
-            <n-select v-model:value="selectYear" :options="yearOpts" />
-          </InlineBox>
-          <n-button :disabled="selectYear > 2099" @click="selectYear++">
-            <template #icon>
-              <ChevronForwardSharp />
-            </template>
-          </n-button>
-        </n-space>
-      </n-grid-item>
-      <n-grid-item>
-        <n-space :wrap="false">
-          <n-button :disabled="selectMonth < 2" @click="selectMonth--">
-            <template #icon>
-              <ChevronBackSharp />
-            </template>
-          </n-button>
-          <InlineBox :width="100">
-            <n-select v-model:value="selectMonth" :options="monthOpts" />
-          </InlineBox>
-          <n-button :disabled="selectMonth > 11" @click="selectMonth++">
-            <template #icon>
-              <ChevronForwardSharp />
-            </template>
-          </n-button>
-        </n-space>
-      </n-grid-item>
-      <n-grid-item>
-        <n-space align="center">
-          <n-button @click="backToday"> 回到今天 </n-button>
-          <n-switch v-model:value="isSundayStart" size="large">
-            <template #checked> 周日开始 </template>
-            <template #unchecked> 周一开始 </template>
-          </n-switch>
-        </n-space>
-      </n-grid-item>
-    </n-grid>
+    <!-- <h1>{{ onTapYear }}年{{ onTapMonth }}月{{ onTapDay }}日</h1> -->
+    <n-space class="date-selector-bar">
+      <n-space :wrap="false">
+        <n-button :disabled="selectYear < 1902" @click="selectYear--">
+          <template #icon>
+            <ChevronBackSharp />
+          </template>
+        </n-button>
+        <InlineBox :width="80">
+          <n-select v-model:value="selectYear" :options="yearOpts" />
+        </InlineBox>
+        <n-button :disabled="selectYear > 2099" @click="selectYear++">
+          <template #icon>
+            <ChevronForwardSharp />
+          </template>
+        </n-button>
+      </n-space>
+      <n-space :wrap="false">
+        <n-button :disabled="selectMonth < 2" @click="selectMonth--">
+          <template #icon>
+            <ChevronBackSharp />
+          </template>
+        </n-button>
+        <InlineBox :width="80">
+          <n-select v-model:value="selectMonth" :options="monthOpts" />
+        </InlineBox>
+        <n-button :disabled="selectMonth > 11" @click="selectMonth++">
+          <template #icon>
+            <ChevronForwardSharp />
+          </template>
+        </n-button>
+      </n-space>
+      <n-space align="center">
+        <n-button @click="backToday"> 回到今天 </n-button>
+        <n-switch v-model:value="isSundayStart" size="large">
+          <template #checked> 周日开始 </template>
+          <template #unchecked> 周一开始 </template>
+        </n-switch>
+      </n-space>
+    </n-space>
     <div class="wow-calendar">
       <div class="wow-calendar-week">
         <div
@@ -288,6 +276,9 @@ function backToday() {
 </template>
 
 <style scoped>
+.date-selector-bar {
+  margin: 12px auto;
+}
 .wow-calendar {
   border-style: solid;
   border-color: #efefef;
@@ -303,6 +294,7 @@ function backToday() {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: minmax(100px, auto);
+  grid-auto-columns: minmax(100px, auto);
 }
 
 .wow-calendar-week--item {
