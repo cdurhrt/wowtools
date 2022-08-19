@@ -21,6 +21,7 @@ const collapsedWidth = 64;
   <n-space vertical>
     <n-layout has-sider>
       <n-layout-sider
+        v-if="false"
         class="wfw-layout-sider"
         bordered
         collapse-mode="width"
@@ -44,7 +45,7 @@ const collapsedWidth = 64;
         </n-scrollbar>
       </n-layout-sider>
       <n-layout>
-        <n-layout-content content-style="padding: 1rem;">
+        <n-layout-content content-style="">
           <n-scrollbar style="max-height: 100vh; box-sizing: border-box">
             <slot></slot>
           </n-scrollbar>

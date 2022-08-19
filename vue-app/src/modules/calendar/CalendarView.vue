@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { getYear, getMonth, getDate } from "date-fns";
-import { NSpace } from "naive-ui";
 import { ref, computed } from "vue";
 import WowCalendar from "./components/WowCalendar.vue";
 import type { CalendarDay } from "./models/calendar-day";
@@ -48,9 +47,19 @@ function calendarDaySelected(day: CalendarDay) {
 <style scoped>
 .calendar-view {
   display: flex;
+  flex-wrap: wrap;
+  /* min-width: 888px; */
+  margin: 0 auto;
 }
-.calendar-wrapper,
+.calendar-wrapper {
+  flex: 2;
+  min-width: 888px;
+  margin: 12px;
+}
 .calendar-paper-wrapper {
   flex: 1;
+  margin: 12px;
+  padding-top: 58px;
+  /* margin: 58px -12px 24px; */
 }
 </style>

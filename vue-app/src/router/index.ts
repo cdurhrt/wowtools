@@ -1,7 +1,19 @@
 import type { Component } from "vue";
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+  type RouteRecordRaw,
+} from "vue-router";
 import homeRoutes from "@/modules/home/routes";
 import calendarRoutes from "@/modules/calendar/routes";
+
+const mainRoutes: RouteRecordRaw[] = [
+  {
+    path: "/",
+    redirect: "/calendar",
+  },
+];
 
 export type RouteMeta = {
   label: string;
@@ -12,10 +24,11 @@ export function meta(m: RouteMeta) {
   return { meta: m };
 }
 
-export const routes = [...homeRoutes, ...calendarRoutes];
+export const routes = [...mainRoutes, ...homeRoutes, ...calendarRoutes];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
 });
 

@@ -5,7 +5,7 @@ import HomeViewVue from "./HomeView.vue";
 
 const routes: RouteRecordRaw[] = [
   {
-    path: "/",
+    path: "/home",
     name: "home",
     component: HomeViewVue,
     ...meta({
