@@ -9,21 +9,17 @@ import {
 } from "date-fns";
 import { computed, reactive, watchEffect, ref } from "vue";
 import { CalendarUtil } from "@/libs/calendar/calendar.js";
-import {
-  NButton,
-  NSpace,
-  NSelect,
-  NGrid,
-  NGridItem,
-  NPopover,
-  NSwitch,
-} from "naive-ui";
+import { NButton, NSpace, NSelect, NPopover, NSwitch } from "naive-ui";
 import { compact, map, range } from "lodash";
 import InlineBox from "@/components/global/InlineBox.vue";
 import { ChevronBackSharp, ChevronForwardSharp } from "@vicons/ionicons5";
 import type { CalendarDay } from "../models/calendar-day.js";
-import { CalendarDayCircleSigns } from "../models/day-signs";
+import {
+  CalendarDayCircleSigns,
+  CalendarDayTypeFields,
+} from "../models/day-signs";
 import { isHoliday, isHolidayFix } from "../models/holiday.js";
+import { CalendarDayTypeEnum } from "../models/day.type";
 
 const props = defineProps<{
   year?: number;
@@ -77,9 +73,18 @@ const onTapDay = ref(paramsDay.value);
 const selectDate = computed(
   () => new Date(selectYear.value, selectMonth.value - 1, selectDay.value)
 );
-console.log("selectDate :>> ", selectDate.value);
 
 const dateDetailsList = reactive<Array<CalendarDay>>([]);
+
+const colors = reactive<Record<string, string>>({
+  holidaySecondary:
+    CalendarDayCircleSigns[CalendarDayTypeFields[CalendarDayTypeEnum.holiday]]
+      .color.secondary,
+  holidayFixSecondary:
+    CalendarDayCircleSigns[
+      CalendarDayTypeFields[CalendarDayTypeEnum["holiday-fix"]]
+    ].color.secondary,
+});
 
 watchEffect(() => {
   const monthStartDate = startOfMonth(selectDate.value);
@@ -241,6 +246,8 @@ function backToday() {
                 item.cYear === onTapYear &&
                 item.cMonth === onTapMonth &&
                 item.cDay === onTapDay,
+              'is-holiday': item.isHoliday,
+              'is-holiday-fix': item.isHolidayFix,
             }"
           >
             <n-space class="circle-signs" :wrap="false">
@@ -281,7 +288,7 @@ function backToday() {
 }
 .wow-calendar {
   border-style: solid;
-  border-color: #efefef;
+  border-color: #e0e0e6;
   border-width: 1px 0 0 1px;
 }
 .wow-calendar-week {
@@ -314,7 +321,7 @@ function backToday() {
 .wow-calendar-week--item,
 .wow-calendar-day--item {
   border-style: solid;
-  border-color: #f4f4f4;
+  border-color: #e0e0e6;
   border-width: 0 1px 1px 0;
 }
 
@@ -373,5 +380,12 @@ function backToday() {
 
 .is-on-selected {
   background-color: #eaf2fd;
+}
+
+.is-holiday {
+  background-color: v-bind("colors.holidaySecondary");
+}
+.is-holiday-fix {
+  background-color: v-bind("colors.holidayFixSecondary");
 }
 </style>

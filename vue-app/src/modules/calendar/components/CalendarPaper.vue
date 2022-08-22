@@ -138,9 +138,10 @@ function gTagFn(type: TypeEnum, fn: (d: CalendarDay) => string[]) {
 .calendar-paper {
   min-width: 600px;
   padding: 40px 32px;
+  border: 1px solid #e0e0e6;
   /* margin: 0 12px 12px; */
-  box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px,
-    rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
+  /* box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px,
+    rgba(9, 30, 66, 0.08) 0px 0px 0px 1px; */
 }
 .cDay {
   font-size: 60px;

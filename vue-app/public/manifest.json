@@ -10,17 +10,17 @@
   ],
   "action": {
     "default_icon": {
-      "16": "/images/icon.png",
-      "32": "/images/icon.png",
-      "48": "/images/icon.png",
-      "128": "/images/icon.png"
+      "16": "/images/icon-newtab.png",
+      "32": "/images/icon-newtab.png",
+      "48": "/images/icon-newtab.png",
+      "128": "/images/icon-newtab.png"
     }
   },
   "icons": {
-    "16": "/images/icon.png",
-    "32": "/images/icon.png",
-    "48": "/images/icon.png",
-    "128": "/images/icon.png"
+    "16": "/images/icon-newtab.png",
+    "32": "/images/icon-newtab.png",
+    "48": "/images/icon-newtab.png",
+    "128": "/images/icon-newtab.png"
   },
   "chrome_url_overrides": {
     "newtab": "index.html"

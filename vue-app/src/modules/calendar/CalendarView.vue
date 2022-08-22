@@ -16,7 +16,6 @@ const dayBoardDay = ref<CalendarDay>(
 );
 
 function calendarDaySelected(day: CalendarDay) {
-  console.log("day :>> ", day);
   dayBoardDay.value = day;
 }
 </script>
@@ -35,30 +34,27 @@ function calendarDaySelected(day: CalendarDay) {
       <CalendarPaper :data="dayBoardDay"></CalendarPaper>
     </div>
   </div>
-
-  <!-- <WowCalendar
-    :year="calendarYear"
-    :month="calendarMonth"
-    :day="calendarDay"
-    @on-day-selected="calendarDaySelected"
-  ></WowCalendar> -->
 </template>
 
 <style scoped>
 .calendar-view {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
-  /* min-width: 888px; */
-  margin: 0 auto;
+  min-width: 888px;
+  margin: 24px 8%;
+  /* box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 8px -2px,
+    rgba(9, 30, 66, 0.08) 0px 0px 0px 1px; */
 }
 .calendar-wrapper {
   flex: 2;
   min-width: 888px;
-  margin: 12px;
+  margin: 12px 24px 24px;
 }
 .calendar-paper-wrapper {
   flex: 1;
-  margin: 12px;
+  margin: 12px 24px 24px;
   padding-top: 58px;
   /* margin: 58px -12px 24px; */
 }
