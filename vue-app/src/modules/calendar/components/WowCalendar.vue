@@ -77,6 +77,9 @@ const selectDate = computed(
 const dateDetailsList = reactive<Array<CalendarDay>>([]);
 
 const colors = reactive<Record<string, string>>({
+  todaySecondary:
+    CalendarDayCircleSigns[CalendarDayTypeFields[CalendarDayTypeEnum.today]]
+      .color.secondary,
   holidaySecondary:
     CalendarDayCircleSigns[CalendarDayTypeFields[CalendarDayTypeEnum.holiday]]
       .color.secondary,
@@ -246,6 +249,7 @@ function backToday() {
                 item.cYear === onTapYear &&
                 item.cMonth === onTapMonth &&
                 item.cDay === onTapDay,
+              'is-today': item.isToday,
               'is-holiday': item.isHoliday,
               'is-holiday-fix': item.isHolidayFix,
             }"
@@ -378,8 +382,8 @@ function backToday() {
   margin: 8px auto;
 }
 
-.is-on-selected {
-  background-color: #eaf2fd;
+.is-today {
+  background-color: v-bind("colors.todaySecondary");
 }
 
 .is-holiday {
@@ -387,5 +391,8 @@ function backToday() {
 }
 .is-holiday-fix {
   background-color: v-bind("colors.holidayFixSecondary");
+}
+.is-on-selected {
+  background-color: #eaf2fd;
 }
 </style>

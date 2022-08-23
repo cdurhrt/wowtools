@@ -7,6 +7,7 @@ import {
 } from "vue-router";
 import homeRoutes from "@/modules/home/routes";
 import calendarRoutes from "@/modules/calendar/routes";
+import newsRoutes from "@/modules/news/routes";
 
 const mainRoutes: RouteRecordRaw[] = [
   {
@@ -24,7 +25,12 @@ export function meta(m: RouteMeta) {
   return { meta: m };
 }
 
-export const routes = [...mainRoutes, ...homeRoutes, ...calendarRoutes];
+export const routes = [
+  ...mainRoutes,
+  ...homeRoutes,
+  ...newsRoutes,
+  ...calendarRoutes,
+];
 
 const router = createRouter({
   // history: createWebHistory(import.meta.env.BASE_URL),
