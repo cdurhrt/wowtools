@@ -3,10 +3,18 @@
   "name": "my-calendar-tab",
   "version": "0.1.0",
   "description": "check check",
+  "background": {
+    "service_worker": "/js/background.js"
+  },
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "proxy",
+    "webRequest",
+    "https://tophub.today/",
+    "http://*/*",
+    "https://*/*"
   ],
   "action": {
     "default_icon": {

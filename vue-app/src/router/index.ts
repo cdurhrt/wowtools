@@ -12,7 +12,7 @@ import newsRoutes from "@/modules/news/routes";
 const mainRoutes: RouteRecordRaw[] = [
   {
     path: "/",
-    redirect: "/calendar",
+    redirect: "/news",
   },
 ];
 

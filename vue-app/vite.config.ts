@@ -20,6 +20,14 @@ export default defineConfig({
           return path.replace("/tophub", "");
         },
       },
+      "/zhihu": {
+        target: "https://www.zhihu.com/hot",
+        changeOrigin: true,
+        secure: false,
+        rewrite(path) {
+          return path.replace("/zhihu", "");
+        },
+      },
     },
   },
 });
