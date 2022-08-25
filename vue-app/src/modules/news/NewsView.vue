@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { reject } from "lodash";
-import { onBeforeMount, reactive, ref } from "vue";
-import { testSendMsg, extFetch } from "./util";
+import { onBeforeMount, ref } from "vue";
+import { extFetch } from "../../utils/ext-utils";
 
 const newsList = ref();
 
