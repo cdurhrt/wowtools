@@ -7,19 +7,13 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  const execStrategies = {
-    fetch: fetchMsgStrategy(),
-  };
-  const { type } = request;
-  execStrategies[type](request, sender, sendResponse);
-});
+  const { type, url, init = undefined, preFn } = request;
 
-function fetchMsgStrategy() {
-  return (request, sender, sendResponse) => {
-    const { url, init = undefined } = request;
-    fetch(url, init).then((res) => {
-      sendResponse(res);
-    });
-    return true;
-  };
-}
+  if (type === "fetch") {
+    fetch(url, init)
+      .then((res) => res[preFn]())
+      .then((res) => sendResponse(res))
+      .catch((err) => console.error(err));
+  }
+  return true;
+});

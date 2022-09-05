@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from "vue";
-import { extFetch } from "../../utils/ext-utils";
+import { extFetch } from "../../utils/crt-utils";
+
+const { VITE_BASE_URL } = import.meta.env;
 
 const newsList = ref();
 
@@ -8,7 +10,6 @@ onBeforeMount(() => {
   const tophubDOMString = localStorage.getItem("tophubDOM") || "";
   parseTophubHtml(tophubDOMString);
   getTophubToday();
-  // getzhihu();
 });
 
 const parseTophubHtml = (res: string) => {
@@ -47,18 +48,7 @@ const parseTophubHtml = (res: string) => {
 };
 
 function getTophubToday() {
-  // extFetch("/tophub")
-  //   .then((res) => res.text())
-  //   .then(parseTophubHtml);
-  extFetch("https://tophub.today/").then((res) => {
-    console.log("extFetch /tophub res :>> ", res);
-  });
-}
-
-function getzhihu() {
-  fetch("/zhihu").then((res) => {
-    console.log("res :>> ", res);
-  });
+  extFetch(VITE_BASE_URL + "/tophub", "text").then(parseTophubHtml);
 }
 </script>
 
@@ -68,7 +58,7 @@ function getzhihu() {
       <h3>{{ bang.name }}{{ bang.type }}</h3>
       <ul class="news-list">
         <li v-for="link in bang.linksList" :key="bang.id + '-' + link.itemid">
-          {{ link.title }}
+          <a :href="link.href" target="_blank">{{ link.title }}</a>
         </li>
       </ul>
     </div>
