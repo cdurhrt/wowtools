@@ -221,6 +221,7 @@ function backToday() {
           <template #checked> 周日开始 </template>
           <template #unchecked> 周一开始 </template>
         </n-switch>
+        <router-link to="/news">新闻头条</router-link>
       </n-space>
     </n-space>
     <div class="wow-calendar">
