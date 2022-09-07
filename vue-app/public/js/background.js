@@ -8,7 +8,6 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const { type, url, init = undefined, preFn } = request;
-
   if (type === "fetch") {
     fetch(url, init)
       .then((res) => res[preFn]())

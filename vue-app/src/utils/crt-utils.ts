@@ -11,7 +11,6 @@ export function extFetch(
       chrome.runtime.sendMessage(
         { type: "fetch", url, init, preFn },
         (res: any) => {
-          console.log("chrome.runtime.sendMessage res :>> ", res);
           resolve(res);
         }
       );
