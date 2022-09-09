@@ -1,5 +1,15 @@
 <script setup lang="ts">
-import { NTabPane, NTabs, NOl, NLi, NTag, NH3, NButton, NIcon } from "naive-ui";
+import {
+  NTabPane,
+  NTabs,
+  NOl,
+  NLi,
+  NTag,
+  NH3,
+  NButton,
+  NIcon,
+  NEmpty,
+} from "naive-ui";
 import { computed, onBeforeMount, reactive, ref, type Ref } from "vue";
 import { extFetch } from "../../utils/crt-utils";
 import type { NewsBillboard, NewsBillboardSetting, NewsLink } from "./news";
@@ -72,19 +82,15 @@ function setListForIt(list: NewsBillboard[]) {
         };
       })
     );
-    updateSettingEnabled(getSettingsEnabled());
+    updateSettingEnabled();
   };
 }
 
 // 手动更新SettingEnabled的值
-function updateSettingEnabled(list: NewsBillboardSetting[]) {
+function updateSettingEnabled(
+  list: NewsBillboardSetting[] = getSettingsEnabled()
+) {
   reactiveArrayCover<NewsBillboardSetting>(settingsEnabled, list);
-}
-
-// 当删除一个已启用时
-function handleNTagClose(item: NewsBillboardSetting) {
-  settings.find((f) => f.id === item.id)!.disabled = true;
-  updateSettingEnabled(getSettingsEnabled());
 }
 
 // 返回settings中所有已启用的
@@ -92,10 +98,16 @@ function getSettingsEnabled(): NewsBillboardSetting[] {
   return settings.filter((f) => !f.disabled);
 }
 
-// 启用某一个时
-function setTabEnabled(item: NewsBillboardSetting) {
-  settings.find((f) => f.id === item.id)!.disabled = false;
-  updateSettingEnabled(getSettingsEnabled());
+// 设置所有的项启停
+function setAllDisabled(value: boolean) {
+  settings.forEach((f) => (f.disabled = value));
+  updateSettingEnabled();
+}
+
+// 启用某一个项启停
+function setOneEnabled(item: NewsBillboardSetting, value = true) {
+  settings.find((f) => f.id === item?.id)!.disabled = !value;
+  updateSettingEnabled();
 }
 
 // 请求
@@ -112,8 +124,7 @@ function DOMTextRequest() {
 onBeforeMount(() => {
   const cacheDOMText = localStorage.getItem("DOM") || "";
   setListForIt(newsList)(cacheDOMText);
-  // DOMTextRequest();
-  console.log("MODE :>> ", MODE);
+  DOMTextRequest();
 });
 </script>
 
@@ -121,14 +132,20 @@ onBeforeMount(() => {
   <n-tabs v-model:value="vm_tab" type="card" animated>
     <n-tab-pane name="设置" tab="设置">
       <div class="setting-valid-tags" @dragover="onDragOver">
-        <n-h3 prefix="bar" align-text>已启用的Tab：</n-h3>
-        <transition-group name="sort" tag="div">
+        <n-h3 prefix="bar" align-text>已启用的标签：</n-h3>
+        <div>
+          <n-button v-if="settingsEnabled.length" @click="setAllDisabled(true)">
+            停用所有
+          </n-button>
+          <n-empty v-else description="空"> </n-empty>
+        </div>
+        <transition-group name="sort" appear tag="div">
           <n-tag
             v-for="(item, idx) in settingsEnabled"
             :key="item.id"
             type="success"
             closable
-            @close="handleNTagClose(item)"
+            @close="setOneEnabled(item, false)"
             :draggable="true"
             @dragstart="onDragStart(item)"
             @dragenter="onDragEnter(item, $event)"
@@ -140,15 +157,24 @@ onBeforeMount(() => {
         </transition-group>
       </div>
       <div class="setting-valid-tags">
-        <n-h3 prefix="bar" align-text>未启用的Tab：</n-h3>
+        <n-h3 prefix="bar" align-text>未启用的标签：</n-h3>
         <div>
+          <n-button
+            v-if="settingsDisabled.length"
+            @click="setAllDisabled(false)"
+          >
+            启用所有
+          </n-button>
+          <n-empty v-else description="空"> </n-empty>
+        </div>
+        <transition-group name="take-up" appear tag="div">
           <n-button
             v-for="item in settingsDisabled"
             :key="item.id"
             ghost
             size="small"
             icon-placement="right"
-            @click="setTabEnabled(item)"
+            @click="setOneEnabled(item)"
           >
             {{ item.name + item.type }}
             <template #icon>
@@ -157,7 +183,7 @@ onBeforeMount(() => {
               </n-icon>
             </template>
           </n-button>
-        </div>
+        </transition-group>
       </div>
     </n-tab-pane>
     <template v-for="bang in newsList" :key="bang.id">
@@ -176,6 +202,24 @@ onBeforeMount(() => {
 <style scoped>
 .sort-move {
   transition: transform 0.3s;
+}
+.sort-enter-active,
+.sort-leave-active {
+  transition: all 0.3s ease;
+}
+.sort-enter-from,
+.sort-leave-to {
+  opacity: 0;
+  /* transform: translateY(100px); */
+}
+.take-up-enter-active,
+.take-up-leave-active {
+  transition: all 0.3s ease;
+}
+.take-up-enter-from,
+.take-up-leave-to {
+  opacity: 0;
+  /* transform: translateY(-100px); */
 }
 .setting-valid-tags {
   padding: 0 54px;
