@@ -9,26 +9,28 @@ import {
   NButton,
   NIcon,
   NEmpty,
+  NSpace,
+  NSpin,
 } from "naive-ui";
-import { computed, onBeforeMount, reactive, ref, type Ref } from "vue";
+import { computed, onBeforeMount, reactive, ref } from "vue";
 import { extFetch } from "../../utils/crt-utils";
 import type { NewsBillboard, NewsBillboardSetting, NewsLink } from "./news";
 import { onDragStart, onDragEnter, onDragEnd, onDragOver } from "./drag";
-import { cloneDeep } from "lodash";
 import { Add24Regular } from "@vicons/fluent";
 
 const { VITE_BASE_URL, MODE } = import.meta.env;
 
+const vm_tab = ref("设置");
+const spinning = ref(false);
 const newsList = reactive<NewsBillboard[]>([]);
 const settings = reactive<NewsBillboardSetting[]>([]);
 const settingsEnabled = reactive<NewsBillboardSetting[]>([]);
 const settingsDisabled = computed<NewsBillboardSetting[]>(() => {
   return settings.filter((f) => f.disabled);
 });
-const vm_tab = ref("设置");
 
 // 整个覆盖reactive数组的值
-function reactiveArrayCover<T>(target: T[], value: T[]): void {
+function ArrayCover<T>(target: T[], value: T[]): void {
   target.splice(0, target.length, ...value);
 }
 
@@ -65,32 +67,11 @@ function getListFromDOMText(res: string): NewsBillboard[] {
   );
 }
 
-function setListForIt(list: NewsBillboard[]) {
-  return (res: string) => {
-    list.splice(0, list.length, ...getListFromDOMText(res));
-    reactiveArrayCover(
-      settings,
-      list.map((m, idx) => {
-        const { id, name, type, refreshAt } = m;
-        return {
-          id,
-          name,
-          type,
-          refreshAt,
-          disabled: false,
-          sort: idx + 1,
-        };
-      })
-    );
-    updateSettingEnabled();
-  };
-}
-
 // 手动更新SettingEnabled的值
 function updateSettingEnabled(
   list: NewsBillboardSetting[] = getSettingsEnabled()
 ) {
-  reactiveArrayCover<NewsBillboardSetting>(settingsEnabled, list);
+  ArrayCover<NewsBillboardSetting>(settingsEnabled, list);
 }
 
 // 返回settings中所有已启用的
@@ -110,14 +91,48 @@ function setOneEnabled(item: NewsBillboardSetting, value = true) {
   updateSettingEnabled();
 }
 
+// 缓存 news-settings
+function saveSettings() {
+  try {
+    localStorage.setItem("news-settings", JSON.stringify(settingsEnabled));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function setListForIt(list: NewsBillboard[]) {
+  return (res: string) => {
+    ArrayCover(list, getListFromDOMText(res));
+    ArrayCover(
+      settings,
+      list.map((m, idx) => {
+        const { id, name, type, refreshAt } = m;
+        return {
+          id,
+          name,
+          type,
+          refreshAt,
+          disabled: false,
+          sort: idx + 1,
+        };
+      })
+    );
+    updateSettingEnabled();
+  };
+}
+
 // 请求
 function DOMTextRequest() {
+  spinning.value = true;
   if (MODE === "production") {
-    extFetch(VITE_BASE_URL + "/tophub", "text").then(setListForIt(newsList));
+    extFetch(VITE_BASE_URL + "/tophub", "text")
+      .then(setListForIt(newsList))
+      .finally(() => (spinning.value = false));
   } else {
     fetch(VITE_BASE_URL + "/tophub")
       .then((res) => res.text())
-      .then(setListForIt(newsList));
+      .then(setListForIt(newsList))
+      .finally(() => (spinning.value = false));
   }
 }
 
@@ -131,69 +146,81 @@ onBeforeMount(() => {
 <template>
   <n-tabs v-model:value="vm_tab" type="card" animated>
     <n-tab-pane name="设置" tab="设置">
-      <div class="setting-valid-tags" @dragover="onDragOver">
-        <n-h3 prefix="bar" align-text>已启用的标签：</n-h3>
-        <div>
-          <n-button v-if="settingsEnabled.length" @click="setAllDisabled(true)">
-            停用所有
-          </n-button>
-          <n-empty v-else description="空"> </n-empty>
+      <n-spin :show="spinning">
+        <div class="settings-wrapper" @dragover="onDragOver">
+          <n-h3 prefix="bar" align-text>已启用的标签：</n-h3>
+          <div>
+            <n-button
+              v-if="settingsEnabled.length"
+              @click="setAllDisabled(true)"
+            >
+              停用所有
+            </n-button>
+            <n-empty v-else description="空"> </n-empty>
+          </div>
+          <transition-group name="sort" appear tag="div">
+            <n-tag
+              v-for="(item, idx) in settingsEnabled"
+              :key="item.id"
+              type="success"
+              closable
+              @close="setOneEnabled(item, false)"
+              :draggable="true"
+              @dragstart="onDragStart(item)"
+              @dragenter="onDragEnter(item, $event)"
+              @dragend="onDragEnd(settingsEnabled)"
+              @dragover="onDragOver($event)"
+            >
+              {{ idx + 1 }}：{{ item.name + item.type }}
+            </n-tag>
+          </transition-group>
         </div>
-        <transition-group name="sort" appear tag="div">
-          <n-tag
-            v-for="(item, idx) in settingsEnabled"
-            :key="item.id"
-            type="success"
-            closable
-            @close="setOneEnabled(item, false)"
-            :draggable="true"
-            @dragstart="onDragStart(item)"
-            @dragenter="onDragEnter(item, $event)"
-            @dragend="onDragEnd(settingsEnabled)"
-            @dragover="onDragOver($event)"
-          >
-            {{ idx + 1 }}：{{ item.name + item.type }}
-          </n-tag>
-        </transition-group>
-      </div>
-      <div class="setting-valid-tags">
-        <n-h3 prefix="bar" align-text>未启用的标签：</n-h3>
-        <div>
-          <n-button
-            v-if="settingsDisabled.length"
-            @click="setAllDisabled(false)"
-          >
-            启用所有
-          </n-button>
-          <n-empty v-else description="空"> </n-empty>
+        <div class="settings-wrapper">
+          <n-h3 prefix="bar" align-text>未启用的标签：</n-h3>
+          <div>
+            <n-button
+              v-if="settingsDisabled.length"
+              @click="setAllDisabled(false)"
+            >
+              启用所有
+            </n-button>
+            <n-empty v-else description="空"> </n-empty>
+          </div>
+          <transition-group name="take-up" appear tag="div">
+            <n-button
+              v-for="item in settingsDisabled"
+              :key="item.id"
+              ghost
+              size="small"
+              icon-placement="right"
+              @click="setOneEnabled(item)"
+            >
+              {{ item.name + item.type }}
+              <template #icon>
+                <n-icon>
+                  <Add24Regular />
+                </n-icon>
+              </template>
+            </n-button>
+          </transition-group>
         </div>
-        <transition-group name="take-up" appear tag="div">
-          <n-button
-            v-for="item in settingsDisabled"
-            :key="item.id"
-            ghost
-            size="small"
-            icon-placement="right"
-            @click="setOneEnabled(item)"
-          >
-            {{ item.name + item.type }}
-            <template #icon>
-              <n-icon>
-                <Add24Regular />
-              </n-icon>
-            </template>
-          </n-button>
-        </transition-group>
-      </div>
+        <div class="settings-wrapper">
+          <n-space>
+            <n-button type="primary" @click="saveSettings">保存</n-button>
+          </n-space>
+        </div>
+      </n-spin>
     </n-tab-pane>
     <template v-for="bang in newsList" :key="bang.id">
       <n-tab-pane :name="bang.name + bang.type" :tab="bang.name + bang.type">
-        <n-ol>
-          <n-li v-for="link in bang.linksList" :key="bang.id + '-' + link.id">
-            <a :href="link.href" target="_blank">{{ link.title }}</a>
-            {{ link.oinfo }}
-          </n-li>
-        </n-ol>
+        <n-spin :show="spinning">
+          <n-ol>
+            <n-li v-for="link in bang.linksList" :key="bang.id + '-' + link.id">
+              <a :href="link.href" target="_blank">{{ link.title }}</a>
+              {{ link.oinfo }}
+            </n-li>
+          </n-ol>
+        </n-spin>
       </n-tab-pane>
     </template>
   </n-tabs>
@@ -221,7 +248,7 @@ onBeforeMount(() => {
   opacity: 0;
   /* transform: translateY(-100px); */
 }
-.setting-valid-tags {
+.settings-wrapper {
   padding: 0 54px;
   margin: 32px 0;
 }
