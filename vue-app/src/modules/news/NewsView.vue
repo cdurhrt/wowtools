@@ -100,20 +100,31 @@ function saveSettings() {
   }
 }
 
+function getCacheSettings(): NewsBillboardSetting[] {
+  try {
+    return JSON.parse(localStorage.getItem("news-settings") || "");
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
 function setListForIt(list: NewsBillboard[]) {
   return (res: string) => {
     ArrayCover(list, getListFromDOMText(res));
+    const cacheSettings = getCacheSettings();
     ArrayCover(
       settings,
       list.map((m, idx) => {
         const { id, name, type, refreshAt } = m;
+        const cachedIt = cacheSettings.find((f) => f.id === id)!;
         return {
           id,
           name,
           type,
           refreshAt,
-          disabled: false,
-          sort: idx + 1,
+          disabled: !cachedIt,
+          sort: cachedIt?.sort || 0,
         };
       })
     );
