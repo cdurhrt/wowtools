@@ -6,11 +6,10 @@ export interface NewsBillboard {
   refreshAt: any;
   linksList: NewsLink[];
 }
-export interface NewsBillboardSetting {
+export interface NewsBillboardTag {
   id: any;
   name: any;
   type: any;
-  refreshAt: any;
   disabled: boolean;
   sort: number;
 }

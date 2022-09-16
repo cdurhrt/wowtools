@@ -11,22 +11,42 @@ import {
   NEmpty,
   NSpace,
   NSpin,
+  useMessage,
 } from "naive-ui";
 import { computed, onBeforeMount, reactive, ref } from "vue";
 import { extFetch } from "../../utils/crt-utils";
-import type { NewsBillboard, NewsBillboardSetting, NewsLink } from "./news";
+import type { NewsBillboard, NewsBillboardTag, NewsLink } from "./news";
 import { onDragStart, onDragEnter, onDragEnd, onDragOver } from "./drag";
 import { Add24Regular } from "@vicons/fluent";
+import { differenceBy } from "lodash";
 
 const { VITE_BASE_URL, MODE } = import.meta.env;
 
 const vm_tab = ref("设置");
 const spinning = ref(false);
-const newsList = reactive<NewsBillboard[]>([]);
-const settings = reactive<NewsBillboardSetting[]>([]);
-const settingsEnabled = reactive<NewsBillboardSetting[]>([]);
-const settingsDisabled = computed<NewsBillboardSetting[]>(() => {
-  return settings.filter((f) => f.disabled);
+const message = useMessage();
+
+// 解析获得tabs
+const newsTabsList = reactive<NewsBillboard[]>([]);
+const tabs = computed<NewsBillboardTag[]>(() => {
+  return differenceBy(tags.value, tagsEnabled, "id");
+});
+
+// 所有的配置Tag
+const tags = computed<NewsBillboardTag[]>(() =>
+  newsTabsList.map((m, idx) => ({
+    id: m.id,
+    name: m.name,
+    type: m.type,
+    disabled: false,
+    sort: idx + 1,
+  }))
+);
+// 启用的Tag
+const tagsEnabled = reactive<NewsBillboardTag[]>([]);
+// 禁用的Tag
+const tagsDisabled = computed<NewsBillboardTag[]>(() => {
+  return differenceBy(tags.value, tagsEnabled, "id");
 });
 
 // 整个覆盖reactive数组的值
@@ -67,42 +87,45 @@ function getListFromDOMText(res: string): NewsBillboard[] {
   );
 }
 
-// 手动更新SettingEnabled的值
-function updateSettingEnabled(
-  list: NewsBillboardSetting[] = getSettingsEnabled()
-) {
-  ArrayCover<NewsBillboardSetting>(settingsEnabled, list);
+// 手动更新 TagEnabled 的值
+function updateTagEnabled(list: NewsBillboardTag[] = getCacheTagsEnabled()) {
+  ArrayCover<NewsBillboardTag>(tagsEnabled, list);
 }
 
-// 返回settings中所有已启用的
-function getSettingsEnabled(): NewsBillboardSetting[] {
-  return settings.filter((f) => !f.disabled);
+// 停用所有Tag
+function setAllTagsDisabled() {
+  updateTagEnabled([]);
 }
 
-// 设置所有的项启停
-function setAllDisabled(value: boolean) {
-  settings.forEach((f) => (f.disabled = value));
-  updateSettingEnabled();
+// 启用所有Tag
+function setAllTagsEnabled() {
+  updateTagEnabled([...tagsEnabled, ...tagsDisabled.value]);
 }
 
-// 启用某一个项启停
-function setOneEnabled(item: NewsBillboardSetting, value = true) {
-  settings.find((f) => f.id === item?.id)!.disabled = !value;
-  updateSettingEnabled();
+// 停用某一个Tag
+function setTagDisabled(index: number) {
+  tagsEnabled.splice(index, 1);
 }
 
-// 缓存 news-settings
-function saveSettings() {
+// 启用某一个Tag
+function setTagEnabled(item: NewsBillboardTag) {
+  tagsEnabled.push(item);
+}
+
+// 缓存 NEWS-TAGS-ENABLED
+function setCacheTagsEnabled() {
   try {
-    localStorage.setItem("news-settings", JSON.stringify(settingsEnabled));
+    localStorage.setItem("NEWS-TAGS-ENABLED", JSON.stringify(tagsEnabled));
+    message.success("保存成功");
   } catch (error) {
     console.error(error);
   }
 }
 
-function getCacheSettings(): NewsBillboardSetting[] {
+// 获取缓存 NEWS-TAGS-ENABLED
+function getCacheTagsEnabled(): NewsBillboardTag[] {
   try {
-    return JSON.parse(localStorage.getItem("news-settings") || "");
+    return JSON.parse(localStorage.getItem("NEWS-TAGS-ENABLED") || "[]");
   } catch (error) {
     console.error(error);
     return [];
@@ -112,23 +135,7 @@ function getCacheSettings(): NewsBillboardSetting[] {
 function setListForIt(list: NewsBillboard[]) {
   return (res: string) => {
     ArrayCover(list, getListFromDOMText(res));
-    const cacheSettings = getCacheSettings();
-    ArrayCover(
-      settings,
-      list.map((m, idx) => {
-        const { id, name, type, refreshAt } = m;
-        const cachedIt = cacheSettings.find((f) => f.id === id)!;
-        return {
-          id,
-          name,
-          type,
-          refreshAt,
-          disabled: !cachedIt,
-          sort: cachedIt?.sort || 0,
-        };
-      })
-    );
-    updateSettingEnabled();
+    updateTagEnabled();
   };
 }
 
@@ -137,19 +144,19 @@ function DOMTextRequest() {
   spinning.value = true;
   if (MODE === "production") {
     extFetch(VITE_BASE_URL + "/tophub", "text")
-      .then(setListForIt(newsList))
+      .then(setListForIt(newsTabsList))
       .finally(() => (spinning.value = false));
   } else {
     fetch(VITE_BASE_URL + "/tophub")
       .then((res) => res.text())
-      .then(setListForIt(newsList))
+      .then(setListForIt(newsTabsList))
       .finally(() => (spinning.value = false));
   }
 }
 
 onBeforeMount(() => {
   const cacheDOMText = localStorage.getItem("DOM") || "";
-  setListForIt(newsList)(cacheDOMText);
+  setListForIt(newsTabsList)(cacheDOMText);
   DOMTextRequest();
 });
 </script>
@@ -158,53 +165,47 @@ onBeforeMount(() => {
   <n-tabs v-model:value="vm_tab" type="card" animated>
     <n-tab-pane name="设置" tab="设置">
       <n-spin :show="spinning">
-        <div class="settings-wrapper" @dragover="onDragOver">
-          <n-h3 prefix="bar" align-text>已启用的标签：</n-h3>
+        <div class="tags-wrapper" @dragover="onDragOver">
+          <n-h3 prefix="bar" align-text>已启用的Tag：</n-h3>
           <div>
-            <n-button
-              v-if="settingsEnabled.length"
-              @click="setAllDisabled(true)"
-            >
+            <n-button v-if="tagsEnabled.length" @click="setAllTagsDisabled()">
               停用所有
             </n-button>
             <n-empty v-else description="空"> </n-empty>
           </div>
           <transition-group name="sort" appear tag="div">
             <n-tag
-              v-for="(item, idx) in settingsEnabled"
+              v-for="(item, idx) in tagsEnabled"
               :key="item.id"
               type="success"
               closable
-              @close="setOneEnabled(item, false)"
+              @close="setTagDisabled(idx)"
               :draggable="true"
               @dragstart="onDragStart(item)"
               @dragenter="onDragEnter(item, $event)"
-              @dragend="onDragEnd(settingsEnabled)"
+              @dragend="onDragEnd(tagsEnabled)"
               @dragover="onDragOver($event)"
             >
               {{ idx + 1 }}：{{ item.name + item.type }}
             </n-tag>
           </transition-group>
         </div>
-        <div class="settings-wrapper">
-          <n-h3 prefix="bar" align-text>未启用的标签：</n-h3>
+        <div class="tags-wrapper">
+          <n-h3 prefix="bar" align-text>未启用的Tag：</n-h3>
           <div>
-            <n-button
-              v-if="settingsDisabled.length"
-              @click="setAllDisabled(false)"
-            >
+            <n-button v-if="tagsDisabled.length" @click="setAllTagsEnabled()">
               启用所有
             </n-button>
             <n-empty v-else description="空"> </n-empty>
           </div>
           <transition-group name="take-up" appear tag="div">
             <n-button
-              v-for="item in settingsDisabled"
+              v-for="item in tagsDisabled"
               :key="item.id"
               ghost
               size="small"
               icon-placement="right"
-              @click="setOneEnabled(item)"
+              @click="setTagEnabled(item)"
             >
               {{ item.name + item.type }}
               <template #icon>
@@ -215,14 +216,16 @@ onBeforeMount(() => {
             </n-button>
           </transition-group>
         </div>
-        <div class="settings-wrapper">
+        <div class="tags-wrapper">
           <n-space>
-            <n-button type="primary" @click="saveSettings">保存</n-button>
+            <n-button type="primary" @click="setCacheTagsEnabled"
+              >保存</n-button
+            >
           </n-space>
         </div>
       </n-spin>
     </n-tab-pane>
-    <template v-for="bang in newsList" :key="bang.id">
+    <template v-for="bang in newsTabsList" :key="bang.id">
       <n-tab-pane :name="bang.name + bang.type" :tab="bang.name + bang.type">
         <n-spin :show="spinning">
           <n-ol>
@@ -259,7 +262,7 @@ onBeforeMount(() => {
   opacity: 0;
   /* transform: translateY(-100px); */
 }
-.settings-wrapper {
+.tags-wrapper {
   padding: 0 54px;
   margin: 32px 0;
 }

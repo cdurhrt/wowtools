@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import LayoutView from "@/components/layout/LayoutView.vue";
-import { NConfigProvider, darkTheme } from "naive-ui";
+import { NConfigProvider, darkTheme, NMessageProvider } from "naive-ui";
 import { useThemeStore } from "@/stores/theme";
 import lightThemeOverrides from "./modules/theme/light-overrides";
 import darkThemeOverrides from "./modules/theme/dark-overrides";
@@ -16,11 +16,13 @@ const theme = computed(() => (isDark.value ? darkTheme : null));
     :theme="theme"
     :theme-overrides="isDark ? darkThemeOverrides : lightThemeOverrides"
   >
-    <div class="app-container">
-      <layout-view>
-        <RouterView />
-      </layout-view>
-    </div>
+    <n-message-provider>
+      <div class="app-container">
+        <layout-view>
+          <RouterView />
+        </layout-view>
+      </div>
+    </n-message-provider>
   </n-config-provider>
 </template>
 
